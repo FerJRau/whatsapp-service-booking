@@ -22,11 +22,8 @@ RUN poetry install --only main
 # Copy application code
 COPY . .
 
-# Make startup script executable
-RUN chmod +x start.sh
-
 # Expose port
 EXPOSE 8000
 
-# Run the application using startup script
-CMD ["./start.sh"]
+# Use direct uvicorn command to bypass FastAPI auto-detection
+CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
