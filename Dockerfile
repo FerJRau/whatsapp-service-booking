@@ -7,17 +7,11 @@ RUN apt-get update && apt-get install -y \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Poetry
-RUN pip install poetry
+# Copy requirements first (no poetry to avoid FastAPI detection)
+COPY requirements.txt ./
 
-# Copy poetry files
-COPY pyproject.toml poetry.lock* ./
-
-# Configure poetry
-RUN poetry config virtualenvs.create false
-
-# Install dependencies
-RUN poetry install --only main
+# Install dependencies directly with pip
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY . .
@@ -25,5 +19,5 @@ COPY . .
 # Expose port
 EXPOSE 8000
 
-# Use direct uvicorn command to bypass FastAPI auto-detection
-CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Use a simple server.py script to completely bypass detection
+CMD ["python", "server.py"]
