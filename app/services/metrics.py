@@ -196,5 +196,3 @@ class MetricsService:
             logger.info(f"Metrics server started on port {port}")
         except Exception as e:
             logger.error(f"Failed to start metrics server: {e}")
-
-metrics = MetricsService()

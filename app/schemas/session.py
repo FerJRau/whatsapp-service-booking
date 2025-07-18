@@ -45,7 +45,7 @@ class Session(SessionBase):
 
 class MessageBase(BaseModel):
     session_id: str
-    direction: str = Field(..., regex="^(inbound|outbound)$")
+    direction: str = Field(..., pattern="^(inbound|outbound)$")
     message_type: str = "text"
     content: Optional[str] = None
     media_url: Optional[str] = None
