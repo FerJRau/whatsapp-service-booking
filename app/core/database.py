@@ -29,6 +29,12 @@ AsyncSessionLocal = async_sessionmaker(
 
 Base = declarative_base()
 
+def import_models():
+    """Import all models to register them with SQLAlchemy"""
+    from app.models import customer, service, supplier, session, booking
+    
+import_models()
+
 async def get_db() -> AsyncSession:
     """Dependency to get database session"""
     async with AsyncSessionLocal() as session:

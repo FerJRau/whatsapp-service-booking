@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Text, Boolean, DateTime, JSON, Integer
+from sqlalchemy import Column, String, Text, Boolean, DateTime, JSON, Integer, ForeignKey
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
@@ -9,7 +9,7 @@ class Session(Base):
     __tablename__ = "sessions"
     
     id = Column(String(50), primary_key=True, default=lambda: str(uuid.uuid4()))
-    customer_rfc = Column(String(13), nullable=False)
+    customer_rfc = Column(String(13), ForeignKey("customers.rfc"), nullable=False)
     phone_number = Column(String(20), nullable=False)
     
     status = Column(String(20), default="active")  # active, completed, expired, escalated
@@ -56,7 +56,7 @@ class Message(Base):
     __tablename__ = "messages"
     
     id = Column(String(50), primary_key=True, default=lambda: str(uuid.uuid4()))
-    session_id = Column(String(50), nullable=False)
+    session_id = Column(String(50), ForeignKey("sessions.id"), nullable=False)
     whatsapp_message_id = Column(String(100))
     
     direction = Column(String(10), nullable=False)  # inbound, outbound

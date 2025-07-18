@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Text, DateTime, JSON, Integer, Float, Boolean
+from sqlalchemy import Column, String, Text, DateTime, JSON, Integer, Float, Boolean, ForeignKey
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.core.database import Base
@@ -8,10 +8,10 @@ class Booking(Base):
     __tablename__ = "bookings"
     
     id = Column(String(50), primary_key=True, default=lambda: str(uuid.uuid4()))
-    customer_rfc = Column(String(13), nullable=False)
-    service_id = Column(String(50), nullable=False)
-    supplier_id = Column(String(50))
-    session_id = Column(String(50))
+    customer_rfc = Column(String(13), ForeignKey("customers.rfc"), nullable=False)
+    service_id = Column(String(50), ForeignKey("services.id"), nullable=False)
+    supplier_id = Column(String(50), ForeignKey("suppliers.id"))
+    session_id = Column(String(50), ForeignKey("sessions.id"))
     
     status = Column(String(20), default="pending")  # pending, confirmed, in_progress, completed, cancelled
     priority = Column(String(20), default="normal")  # low, normal, high, emergency
@@ -73,7 +73,7 @@ class BookingHistory(Base):
     __tablename__ = "booking_history"
     
     id = Column(String(50), primary_key=True, default=lambda: str(uuid.uuid4()))
-    booking_id = Column(String(50), nullable=False)
+    booking_id = Column(String(50), ForeignKey("bookings.id"), nullable=False)
     
     previous_status = Column(String(20))
     new_status = Column(String(20), nullable=False)
@@ -81,7 +81,7 @@ class BookingHistory(Base):
     change_reason = Column(String(200))
     
     notes = Column(Text)
-    metadata = Column(JSON)
+    booking_metadata = Column(JSON)
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
