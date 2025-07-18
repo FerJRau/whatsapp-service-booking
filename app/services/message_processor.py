@@ -23,6 +23,44 @@ class MessageProcessor:
         self.whatsapp_service = WhatsAppService()
         self.escalation_service = EscalationService(db)
     
+    async def process_webhook(self, webhook_data: Any) -> Dict[str, Any]:
+        """Process WhatsApp webhook data"""
+        
+        try:
+            processed_messages = []
+            
+            for entry in webhook_data.entry:
+                for change in entry.changes:
+                    if change.field == "messages" and "messages" in change.value:
+                        for message in change.value["messages"]:
+                            phone_number = message.get("from")
+                            if phone_number:
+                                await self.process_message(
+                                    phone_number=phone_number,
+                                    message_data=message,
+                                    webhook_value=change.value
+                                )
+                                processed_messages.append({
+                                    "message_id": message.get("id"),
+                                    "from": phone_number,
+                                    "processed": True
+                                })
+            
+            return {
+                "status": "success",
+                "processed_messages": processed_messages,
+                "total_processed": len(processed_messages)
+            }
+            
+        except Exception as e:
+            logger.error(f"Error processing webhook: {e}", exc_info=True)
+            return {
+                "status": "error",
+                "error": str(e),
+                "processed_messages": [],
+                "total_processed": 0
+            }
+    
     async def process_message(
         self,
         phone_number: str,
@@ -103,10 +141,12 @@ class MessageProcessor:
         customer = await self.customer_service.get_customer_by_phone(phone_number)
         customer_rfc = customer.rfc if customer else None
         
-        session = await self.session_service.create_session({
-            "customer_rfc": customer_rfc or "UNKNOWN",
-            "phone_number": phone_number
-        })
+        from app.schemas.session import SessionCreate
+        
+        session = await self.session_service.create_session(SessionCreate(
+            customer_rfc=customer_rfc or "UNKN000000000",
+            phone_number=phone_number
+        ))
         
         logger.info(f"Created new session {session.id} for {phone_number}")
         return session

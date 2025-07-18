@@ -83,7 +83,7 @@ class SessionService:
     async def update_session(
         self, 
         session_id: str, 
-        session_data: SessionUpdate
+        session_data: Dict[str, Any]
     ) -> Optional[Session]:
         """Update session information"""
         
@@ -92,7 +92,7 @@ class SessionService:
             if not session:
                 return None
             
-            update_data = session_data.dict(exclude_unset=True)
+            update_data = session_data if isinstance(session_data, dict) else session_data.dict(exclude_unset=True)
             update_data["updated_at"] = datetime.utcnow()
             
             await self.db.execute(
@@ -113,18 +113,18 @@ class SessionService:
     async def add_message(
         self, 
         session_id: str, 
-        message_data: MessageCreate
+        message_data: Dict[str, Any]
     ) -> Message:
         """Add message to session"""
         
         try:
             message = Message(
                 session_id=session_id,
-                whatsapp_message_id=message_data.whatsapp_message_id,
-                direction=message_data.direction,
-                message_type=message_data.message_type,
-                content=message_data.content,
-                media_url=message_data.media_url,
+                whatsapp_message_id=message_data.get("whatsapp_message_id"),
+                direction=message_data.get("direction", "inbound"),
+                message_type=message_data.get("message_type", "text"),
+                content=message_data.get("content"),
+                media_url=message_data.get("media_url"),
                 processed=False,
                 timestamp=datetime.utcnow()
             )
@@ -137,14 +137,14 @@ class SessionService:
                 .values(
                     total_messages=Session.total_messages + 1,
                     last_message_at=datetime.utcnow(),
-                    last_message_content=message_data.content
+                    last_message_content=message_data.get("content")
                 )
             )
             
             await self.db.commit()
             await self.db.refresh(message)
             
-            logger.info(f"Added {message_data.direction} message to session {session_id}")
+            logger.info(f"Added {message_data.get('direction', 'unknown')} message to session {session_id}")
             return message
             
         except Exception as e:
